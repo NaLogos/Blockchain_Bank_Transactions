@@ -1,13 +1,29 @@
 pragma solidity >=0.4.22;
 
 contract contracts {
-    //Store account
-    //Read account
+    //Model a candidate
+    struct Candidate {
+        uint256 id;
+        string name;
+        uint256 voteCount;
+    }
 
-    string public account;
+    //store candidates
+    //fetch candidates
+    mapping(uint256 => Candidate) public candidates;
+
+    //store candidates count
+    uint256 public candidatesCount;
 
     //Constructor
-    function contracts() public {
-        account = "account 1";
+    constructor() {
+        addCandidate("Candidate1");
+        addCandidate("Candidate2");
+    }
+
+    //Adding Candidates
+    function addCandidate(string memory _name) private {
+        candidatesCount++;
+        candidates[candidatesCount] = Candidate(candidatesCount, _name, 0);
     }
 }
