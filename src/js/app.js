@@ -23,11 +23,11 @@ App = {
   },
 
   initContract: function() {
-    $.getJSON("contracts.json", function(election) {
+    $.getJSON("Election.json", function(election) {
       // Instantiate a new truffle contract from the artifact
-      App.contracts.contracts = TruffleContract(election);
+      App.contracts.Election = TruffleContract(election);
       // Connect provider to interact with contract
-      App.contracts.contracts.setProvider(App.web3Provider);
+      App.contracts.Election.setProvider(App.web3Provider);
 
       return App.render();
     });
@@ -42,15 +42,12 @@ App = {
     content.hide();
 
     // Load account data
-    web3.eth.getCoinbase(function(err, account) {
-      if (err === null) {
-        App.account = account;
-        $("#accountAddress").html("Your Account: " + account);
-      }
-    });
+    web3.eth.getAccounts(function(error, accounts){
+      $("#accountAddress").html("Your Account: " + accounts[0]);
+});
 
     // Load contract data
-    App.contracts.contracts.deployed().then(function(instance) {
+    App.contracts.Election.deployed().then(function(instance) {
       electionInstance = instance;
       return electionInstance.candidatesCount();
     }).then(function(candidatesCount) {
@@ -90,7 +87,7 @@ App = {
 
   castVote: function() {
     var candidateId = $('#candidatesSelect').val();
-    App.contracts.contracts.deployed().then(function(instance) {
+    App.contracts.Election.deployed().then(function(instance) {
       return instance.vote(candidateId, { from: App.account });
     }).then(function(result) {
       // Wait for votes to update
