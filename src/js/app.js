@@ -42,9 +42,21 @@ App = {
     content.hide();
 
     // Load account data
+    /*window.ethereum.enable();
     web3.eth.getAccounts(function(error, accounts){
       $("#accountAddress").html("Your Account: " + accounts[0]);
-});
+  });*/
+
+  if(web3.currentProvider.enable){
+    //For metamask
+    web3.currentProvider.enable().then(function(acc){
+        App.account = acc[0];
+        $("#accountAddress").html("Your Account: " + App.account);
+    });
+} else{
+    App.account = web3.eth.accounts[0];
+    $("#accountAddress").html("Your Account: " + App.account);
+}
 
     // Load contract data
     App.contracts.Election.deployed().then(function(instance) {
@@ -86,6 +98,7 @@ App = {
   },
 
   castVote: function() {
+    console.log(App.account);
     var candidateId = $('#candidatesSelect').val();
     App.contracts.Election.deployed().then(function(instance) {
       return instance.vote(candidateId, { from: App.account });
