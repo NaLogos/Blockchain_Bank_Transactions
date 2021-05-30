@@ -2,7 +2,7 @@ App = {
   web3Provider: null,
   contracts: {},
   account: '0x0',
-  hasVoted: false,
+  hasSent: false,
 
   init: function() {
     return App.initWeb3();
@@ -23,11 +23,11 @@ App = {
   },
 
   initContract: function() {
-    $.getJSON("Election.json", function(election) {
+    $.getJSON("Transct.json", function(transct) {
       // Instantiate a new truffle contract from the artifact
-      App.contracts.Election = TruffleContract(election);
+      App.contracts.Transct = TruffleContract(transct);
       // Connect provider to interact with contract
-      App.contracts.Election.setProvider(App.web3Provider);
+      App.contracts.Transct.setProvider(App.web3Provider);
 
       App.listenForEvents();
 
@@ -37,11 +37,11 @@ App = {
 
     // Listen for events emitted from the contract
     listenForEvents: function() {
-      App.contracts.Election.deployed().then(function(instance) {
+      App.contracts.Transct.deployed().then(function(instance) {
         // Restart Chrome if you are unable to receive this event
         // This is a known issue with Metamask
         // https://github.com/MetaMask/metamask-extension/issues/2393
-        instance.votedEvent({}, {
+        instance.transactEvent({}, {
           fromBlock: 0,
           toBlock: 'latest'
         }).watch(function(error, event) {
@@ -53,7 +53,7 @@ App = {
     },
 
   render: function() {
-    var electionInstance;
+    var transctInstance;
     var loader = $("#loader");
     var content = $("#content");
 
@@ -78,37 +78,35 @@ App = {
 }
 
     // Load contract data
-    App.contracts.Election.deployed().then(function(instance) {
-      electionInstance = instance;
-      return electionInstance.candidatesCount();
-    }).then(function(candidatesCount) {
-      var candidatesResults = $("#candidatesResults");
-      candidatesResults.empty();
+    App.contracts.Transct.deployed().then(function(instance) {
+      transctInstance = instance;
+      return transctInstance.clientsCount();
+    }).then(function(clientsCount) {
+      var clientsResults = $("#clientsResults");
+      clientsResults.empty();
 
-      var candidatesSelect = $('#candidatesSelect');
-      candidatesSelect.empty();
+      var clientsSelect = $('#clientsSelect');
+      clientsSelect.empty();
 
-      for (var i = 1; i <= candidatesCount; i++) {
-        electionInstance.candidates(i).then(function(candidate) {
-          var id = candidate[0];
-          var name = candidate[1];
-          var voteCount = candidate[2];
+      for (var i = 1; i <= clientsCount; i++) {
+        transctInstance.clients(i).then(function(client) {
+          var id = client[0];
+          var name = client[1];
+          var balance = client[2];
 
-          // Render candidate Result
-          var candidateTemplate = "<tr><th>" + id + "</th><td>" + name + "</td><td>" + voteCount + "</td></tr>"
-          candidatesResults.append(candidateTemplate);
+          // Render client Result
+          var clientTemplate = "<tr><th>" + id + "</th><td>" + name + "</td><td>" + balance + "</td></tr>"
+          clientsResults.append(clientTemplate);
 
-          // Render candidate ballot option
-          var candidateOption = "<option value='" + id + "' >" + name + "</ option>"
-          candidatesSelect.append(candidateOption);
+          // Render client ballot option
+          var clientOption = "<option value='" + id + "' >" + name + "</ option>"
+          clientsSelect.append(clientOption);
         });
       }
-      return electionInstance.voters(App.account);
-    }).then(function(hasVoted) {
-      // Do not allow a user to vote
-      if(hasVoted) {
-        $('form').hide();
-      }
+      return transctInstance.senders(App.account);
+    }).then(function(hasSent) {
+      
+   
       loader.hide();
       content.show();
     }).catch(function(error) {
@@ -116,12 +114,17 @@ App = {
     });
   },
 
-  castVote: function() {
+  makeTransct: function() {
     console.log(App.account);
-    var candidateId = $('#candidatesSelect').val();
-    App.contracts.Election.deployed().then(function(instance) {
-      return instance.vote(candidateId, { from: App.account });
-    }).then(function(result) {
+    var clientId = $('#clientsSelect').val();
+    var amount = parseInt($('#amount').val());
+    console.log(typeof amount);
+    window.ethereum.enable();
+    web3.eth.accounts;
+    App.contracts.Transct.deployed().then(function(instance) {
+      
+      return instance.sift(clientId, amount, { from: App.account });
+    }).then(function(result) { 
       // Wait for votes to update
       $("#content").hide();
       $("#loader").show();
